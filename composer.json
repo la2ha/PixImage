@@ -1,0 +1,20 @@
+{
+    "name": "la2ha/piximage",
+    "description": "",
+    "authors": [
+        {
+            "name": "la2ha",
+            "email": "la2ha@la2ha.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.1.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "La2ha\\Piximage": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
