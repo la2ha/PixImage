@@ -92,10 +92,9 @@ class PixImage
         $headers = array_merge($headers, array(
 //            'Content-Type' => File::mime(File::extension($path)),
             'Content-Type' => 'image/jpeg',
-//            'Content-Length' => $length,
         ));
 
-        $response = \Response::make($image, 200, $headers);
+        $response = \Response::make($image->encode(null, 100), 200, $headers);
         if (\Config::get('piximage::cache'))
             \Cache::put($cacheKey, $response, \Config::get('piximage::cache_time'));
         return $response;
@@ -113,8 +112,8 @@ class PixImage
 
         $width  = $size[0];
         $height = isset($size[1]) ? $size[1] : $width;
-        $ratio  = isset($options['ratio']) ? $options['ratio'] : false;;
-        $upsize = isset($options['upsize']) ? $options['upsize'] : true;
+        $ratio  = isset($options['ratio']) ? $options['ratio'] : true;;
+        $upsize = isset($options['upsize']) ? $options['upsize'] : false;
 
         $img = Image::make($path);
         $img->resize($width, $height, $ratio, $upsize);
@@ -173,6 +172,7 @@ class PixImage
     /**
      * @param $options
      * @return array
+     * Example: /piximage/nocache-resize-ratio,upsize:0/1000x900/storage/images/jobs/logo/c587db284184431a6c28d658fe8bb621.jpg
      */
     protected function getOptions($options)
     {
