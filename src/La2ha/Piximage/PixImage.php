@@ -83,7 +83,10 @@ class PixImage
                 $image = $this->resize($options, $size, $path);
                 break;
             case 'grab':
-                $image = $this->grab($size, $path);
+                $image = $this->fit($size, $path);
+                break;
+            case 'fit':
+                $image = $this->fit($size, $path);
                 break;
             default:
                 throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -116,7 +119,13 @@ class PixImage
         $upsize = isset($options['upsize']) ? $options['upsize'] : false;
 
         $img = Image::make($path);
-        $img->resize($width, $height, $ratio, $upsize);
+        $img->resize($width, $height, function ($constraint) use ($ratio, $upsize) {
+            if($ratio)
+                $constraint->aspectRatio();
+            if (!$upsize)
+                $constraint->upsize();
+
+        });
         return $img;
     }
 
@@ -125,7 +134,7 @@ class PixImage
      * @param $path
      * @return Image
      */
-    protected function grab($size, $path)
+    protected function fit($size, $path)
     {
         $size = $this->getSize($size);
 
@@ -138,7 +147,7 @@ class PixImage
             $height = $size[1];
         }
         $img = Image::make($path);
-        $img->grab($width, $height);
+        $img->fit($width, $height);
         return $img;
     }
 
@@ -161,11 +170,11 @@ class PixImage
     {
         $imagesize = getimagesize($path);
         if ($width == '*' and $height == '*') {
-            return array($imagesize[0], $imagesize[1]);
+            return array(round($imagesize[0]), round($imagesize[1]));
         } elseif ($height == '*') {
-            return array($width, $imagesize[1] * $width / $imagesize[0]);
+            return array(round($width), round($imagesize[1] * $width / $imagesize[0]));
         } else {
-            return array($imagesize[0] * $height / $imagesize[1], $height);
+            return array(round($imagesize[0] * $height / $imagesize[1]), round($height));
         }
     }
 
