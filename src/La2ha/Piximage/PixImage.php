@@ -71,8 +71,7 @@ class PixImage
         if ($headerTest1 or $headerTest2) { //image is cached by the browser, we dont need to send it again
             return \Response::make('', 304, $headers);
         }
-
-        if (\Config::get('piximage::cache') and \Cache::has($cacheKey))
+        if (\Config::get('piximage::cache') and !\Config::get('piximage::cache_real_save') and \Cache::has($cacheKey))
             return \Cache::get($cacheKey);
 
 
@@ -98,8 +97,17 @@ class PixImage
         ));
 
         $response = \Response::make($image->encode(null, 100), 200, $headers);
-        if (\Config::get('piximage::cache'))
-            \Cache::put($cacheKey, $response, \Config::get('piximage::cache_time'));
+        if (\Config::get('piximage::cache')) {
+            if (\Config::get('piximage::cache_real_save')) {
+                $piximagePath = public_path('piximage/' . $cacheKey);
+                $saveDir      = dirname($piximagePath);
+                if (!file_exists($saveDir))
+                    mkdir($saveDir, 0777, true);
+                $image->save($piximagePath, 100);
+            } else{
+                \Cache::put($cacheKey, $response, \Config::get('piximage::cache_time'));
+            }
+        }
         return $response;
     }
 
@@ -120,7 +128,7 @@ class PixImage
 
         $img = Image::make($path);
         $img->resize($width, $height, function ($constraint) use ($ratio, $upsize) {
-            if($ratio)
+            if ($ratio)
                 $constraint->aspectRatio();
             if (!$upsize)
                 $constraint->upsize();

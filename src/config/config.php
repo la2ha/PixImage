@@ -1,9 +1,11 @@
 <?php
 
 return array(
-    'cache'      => true,
+    'cache'           => true,
 
-    'cache_time' => 5,
+    'cache_real_save' => true,
 
-    'lifetime'   => 60 * 60 * 24 * 365
+    'cache_time'      => 5,
+
+    'lifetime'        => 60 * 60 * 24 * 365
 );
