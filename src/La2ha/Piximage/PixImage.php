@@ -40,11 +40,13 @@ class PixImage
      * @return \Illuminate\Http\Response|mixed
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    public function stream($mode, $size, $path)
+    public function stream($mode, $size, $path, $wmName = null)
     {
         if ($path{0} == '/')
             $path = substr($path, 1);
-        $cacheKey   = $mode . '/' . $size . '/' . $path;
+        $cacheKey = $mode . '/' . $size . '/' . $path;
+        if ($wmName)
+            $cacheKey = 'wm/' . $wmName;
         $path       = public_path($path);
         $modeOption = explode('-', $mode);
         if ($modeOption[0] == 'nocache') {
@@ -96,6 +98,11 @@ class PixImage
             'Content-Type' => 'image/jpeg',
         ));
 
+        if ($wmName) {
+            $watermark = \Config::get('piximage::watermark');
+            $image->insert($watermark, 'bottom-right');
+        }
+
         $response = \Response::make($image->encode(null, 100), 200, $headers);
         if (\Config::get('piximage::cache')) {
             if (\Config::get('piximage::cache_real_save')) {
@@ -104,11 +111,26 @@ class PixImage
                 if (!file_exists($saveDir))
                     mkdir($saveDir, 0777, true);
                 $image->save($piximagePath, 100);
-            } else{
+            } else {
                 \Cache::put($cacheKey, $response, \Config::get('piximage::cache_time'));
             }
         }
         return $response;
+    }
+
+    public function streamWatermark($imageUrl, $imageName)
+    {
+        if (preg_match('#^/piximage/([^/]*)/([^/]*)/(.*)$#sim', $imageUrl, $m)) {
+            $mode = $m[1];
+            $size = $m[2];
+            $path = $m[3];
+            return $this->stream($mode, $size, $path, $imageName);
+        }
+
+        exit;
+        $elements = explode('/', $imageUrl);
+        pre($elements);
+        return $imageUrl;
     }
 
     /**
